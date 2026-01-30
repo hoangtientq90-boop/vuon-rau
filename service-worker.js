@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vuon-rau-v1';
+const CACHE_NAME = 'vuon-rau-v2';
 const urlsToCache = [
   './index.html',
   './manifest.json'
@@ -12,6 +12,7 @@ self.addEventListener('install', event => {
         console.log('Đã mở cache');
         return cache.addAll(urlsToCache);
       })
+      .then(() => self.skipWaiting()) // Force activate immediately
   );
 });
 
@@ -30,7 +31,7 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// Update service worker
+// Update service worker and clear old caches
 self.addEventListener('activate', event => {
   const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
@@ -42,6 +43,6 @@ self.addEventListener('activate', event => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim()) // Take control immediately
   );
 });
