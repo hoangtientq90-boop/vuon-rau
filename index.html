@@ -1,0 +1,1750 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Vườn Rau</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Ứng dụng theo dõi lịch bón phân và phun thuốc cho vườn rau">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Vườn Rau">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Favicon and Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            height: calc(100vh - 20px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            flex: 1;
+        }
+
+        .header h1 {
+            font-size: 1.6em;
+            margin-bottom: 3px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 13px;
+        }
+
+        .backup-section {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .backup-section .btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 320px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-right: 2px solid #e0e0e0;
+            overflow-y: auto;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 20px 30px;
+            overflow-y: auto;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary.active {
+            background: #4a56b8;
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .plant-item {
+            background: white;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .plant-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .plant-item.selected {
+            background: #e3f2fd;
+            border-left-width: 6px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .plant-item-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .plant-color-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.2);
+        }
+
+        .plant-item h3 {
+            color: #333;
+            font-size: 14px;
+            margin: 0;
+            flex: 1;
+        }
+
+        .task-badge {
+            display: inline-block;
+            padding: 3px 6px;
+            background: #e3f2fd;
+            color: #1976d2;
+            border-radius: 4px;
+            font-size: 10px;
+            margin: 2px;
+        }
+
+        .plant-actions {
+            margin-top: 6px;
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .btn-tiny {
+            padding: 4px 8px;
+            font-size: 11px;
+        }
+
+        .filter-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .filter-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .filter-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .filter-chip {
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .filter-chip:hover {
+            background: #f0f0ff;
+        }
+
+        .filter-chip.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .filter-chip.all-plants {
+            border-color: #28a745;
+            color: #28a745;
+        }
+
+        .filter-chip.all-plants.active {
+            background: #28a745;
+            color: white;
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .week-view {
+            margin-top: 20px;
+        }
+
+        .week-header {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .week-header h2 {
+            color: #333;
+            font-size: 1.5em;
+        }
+
+        .week-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .day-column {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .day-column-header {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .day-column-header.today {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .day-column-header.weekend {
+            background: #dc3545;
+        }
+
+        .day-column-body {
+            padding: 10px;
+            min-height: 150px;
+        }
+
+        .day-task-item {
+            background: #f8f9fa;
+            padding: 8px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            border-left: 3px solid;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .day-task-item:hover {
+            transform: translateX(3px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .day-task-plant {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .day-task-name {
+            color: #666;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .calendar-header {
+            text-align: center;
+            font-weight: bold;
+            padding: 10px;
+            background: #667eea;
+            color: white;
+            border-radius: 5px;
+        }
+
+        .calendar-day {
+            min-height: 120px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 8px;
+            background: white;
+            transition: all 0.3s;
+        }
+
+        .calendar-day:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        .calendar-day.other-month {
+            opacity: 0.3;
+            background: #f8f9fa;
+        }
+
+        .calendar-day-number {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .calendar-day.today {
+            background: #fff3cd;
+            border: 3px solid #ffc107;
+        }
+
+        .calendar-day.today .calendar-day-number {
+            color: #ff6f00;
+        }
+
+        .calendar-day.weekend {
+            background: #ffebee;
+        }
+
+        .task-item {
+            font-size: 11px;
+            padding: 4px 6px;
+            margin: 3px 0;
+            border-radius: 4px;
+            border-left: 3px solid;
+            background: #f8f9fa;
+            transition: all 0.3s;
+        }
+
+        .task-item:hover {
+            transform: translateX(2px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .list-view {
+            margin-top: 20px;
+        }
+
+        .day-group {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            border-left: 5px solid #667eea;
+        }
+
+        .day-group.today {
+            border-left-color: #ffc107;
+            background: linear-gradient(to right, #fffbf0, white);
+        }
+
+        .day-group.weekend {
+            border-left-color: #dc3545;
+        }
+
+        .day-group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .day-group-header h3 {
+            color: #333;
+            font-size: 1.3em;
+        }
+
+        .day-group-date {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .list-task {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            margin: 8px 0;
+            border-radius: 8px;
+            border-left: 4px solid;
+            transition: all 0.3s;
+        }
+
+        .list-task:hover {
+            transform: translateX(5px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+        }
+
+        .list-task-plant {
+            font-weight: bold;
+            min-width: 150px;
+            font-size: 15px;
+        }
+
+        .list-task-name {
+            flex: 1;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .month-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .month-nav h2 {
+            color: #333;
+        }
+
+        .week-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 50px;
+            color: #999;
+            font-size: 16px;
+        }
+
+        .no-tasks {
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            padding: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 0;
+            border-radius: 15px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .modal-header h2 {
+            color: #333;
+        }
+
+        .modal-body {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .task-modal-sidebar {
+            width: 280px;
+            background: #f8f9fa;
+            border-right: 2px solid #e0e0e0;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .task-modal-main {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .close-btn {
+            font-size: 30px;
+            cursor: pointer;
+            color: #999;
+            background: none;
+            border: none;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .task-list {
+            margin-top: 20px;
+        }
+
+        .task-list-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .task-library {
+            background: transparent;
+            padding: 0;
+            border-radius: 0;
+            margin-bottom: 0;
+            max-height: none;
+            overflow-y: visible;
+        }
+
+        .task-library h4 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .task-library-item {
+            background: white;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .task-library-item:hover {
+            background: #e3f2fd;
+            transform: translateX(3px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .task-library-item-info {
+            flex: 1;
+        }
+
+        .task-library-item-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+            font-size: 13px;
+        }
+
+        .task-library-item-details {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .task-library-delete {
+            align-self: flex-end;
+        }
+
+        .task-type-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .task-type-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .task-type-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .task-type-btn:hover {
+            border-color: #667eea;
+        }
+
+        .color-preview-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .color-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="width: 150px;"></div>
+            <div class="header-title">
+                <h1>🥬 Quản Lý Vườn Rau</h1>
+                <p>Theo dõi lịch bón phân và phun thuốc cho vườn của bạn</p>
+            </div>
+            <div class="backup-section">
+                <button class="btn btn-success" onclick="exportData()" title="Xuất dữ liệu ra file">📥 Xuất</button>
+                <button class="btn btn-primary" onclick="document.getElementById('importFile').click()" title="Nhập dữ liệu từ file">📤 Nhập</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <button class="btn btn-primary" style="width: 100%; margin-bottom: 20px;" onclick="openAddPlantModal()">
+                    ➕ Thêm Loại Cây Mới
+                </button>
+
+                <div id="plantList"></div>
+            </div>
+
+            <div class="content-area">
+                <div class="filter-section">
+                    <h3>🔍 Bộ Lọc Hiển Thị</h3>
+                    <div class="filter-chips" id="filterChips"></div>
+                </div>
+
+                <div class="view-toggle">
+                    <button class="btn btn-primary active" onclick="switchView('list')">📋 Danh Sách Theo Ngày</button>
+                    <button class="btn btn-secondary" onclick="switchView('week')">📅 Lịch Theo Tuần</button>
+                    <button class="btn btn-secondary" onclick="switchView('month')">📆 Lịch Theo Tháng</button>
+                </div>
+
+                <div id="listView" class="list-view"></div>
+                <div id="weekView" style="display: none;"></div>
+                <div id="monthView" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Thêm/Sửa Cây -->
+    <div id="plantModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2 id="plantModalTitle">Thêm Loại Cây Mới</h2>
+                <button class="close-btn" onclick="closePlantModal()">&times;</button>
+            </div>
+            <div style="padding: 30px;">
+                <div class="form-group">
+                    <label>Tên Loại Cây</label>
+                    <input type="text" id="plantName" placeholder="Ví dụ: Cây Ớt, Cây Cà Chua...">
+                </div>
+                <div class="form-group">
+                    <label>Màu Đánh Dấu</label>
+                    <div class="color-preview-wrapper">
+                        <input type="color" id="plantColor" value="#667eea" onchange="updateColorPreview()">
+                        <div class="color-preview" id="plantColorPreview"></div>
+                        <span id="plantColorText" style="font-weight: 600;">#667eea</span>
+                    </div>
+                </div>
+                <button class="btn btn-success" onclick="savePlant()">💾 Lưu Loại Cây</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Thêm/Sửa Công Việc -->
+    <div id="taskModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="taskModalTitle">Quản Lý Công Việc</h2>
+                <button class="close-btn" onclick="closeTaskModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- Task Library Sidebar -->
+                <div class="task-modal-sidebar">
+                    <div class="task-library">
+                        <h4>📚 Thư Viện Công Việc</h4>
+                        <div id="taskLibraryList"></div>
+                    </div>
+                </div>
+                
+                <!-- Main Content -->
+                <div class="task-modal-main">
+                    <h3 id="taskFormTitle" style="margin-bottom: 20px; color: #667eea;">Thêm Công Việc Mới</h3>
+                    
+                    <div class="form-group">
+                        <label>Tên Công Việc</label>
+                        <input type="text" id="taskName" placeholder="Ví dụ: Bón phân đạm, Phun thuốc bọ trĩ...">
+                    </div>
+                    
+                    <!-- Task Type Toggle -->
+                    <div class="task-type-toggle">
+                        <button class="task-type-btn active" id="periodicBtn" onclick="setTaskType('periodic')">
+                            🔄 Công Việc Định Kỳ
+                        </button>
+                        <button class="task-type-btn" id="oneTimeBtn" onclick="setTaskType('oneTime')">
+                            📅 Công Việc Một Lần
+                        </button>
+                    </div>
+                    
+                    <div id="periodicFields">
+                        <div class="form-group">
+                            <label>Chu Kỳ (số ngày)</label>
+                            <input type="number" id="taskInterval" placeholder="Ví dụ: 7, 10, 14..." min="1" value="7">
+                        </div>
+                        <div class="form-group">
+                            <label>Ngày Bắt Đầu</label>
+                            <input type="date" id="taskStartDate">
+                        </div>
+                    </div>
+                    
+                    <div id="oneTimeFields" style="display: none;">
+                        <div class="form-group">
+                            <label>Ngày Thực Hiện</label>
+                            <input type="date" id="taskOneTimeDate">
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-success" id="saveTaskBtn" onclick="saveTask()" style="width: 100%;">💾 Lưu Công Việc</button>
+
+                    <div class="task-list">
+                        <h3 style="margin-top: 30px; margin-bottom: 15px;">Danh Sách Công Việc Hiện Tại</h3>
+                        <div id="currentTasksList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data structure
+        let plants = JSON.parse(localStorage.getItem('gardenPlants')) || [];
+        let taskLibrary = JSON.parse(localStorage.getItem('taskLibrary')) || [];
+        let currentView = 'list';
+        let currentDate = new Date();
+        let editingPlantId = null;
+        let currentPlantId = null;
+        let selectedPlantFilter = 'all'; // 'all' or plant ID
+        let currentTaskType = 'periodic'; // 'periodic' or 'oneTime'
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            renderPlantList();
+            renderFilterChips();
+            renderListView();
+            
+            // Set default start date to today
+            document.getElementById('taskStartDate').valueAsDate = new Date();
+            document.getElementById('taskOneTimeDate').valueAsDate = new Date();
+            
+            // Update color preview on load
+            updateColorPreview();
+        });
+
+        // Plant Management
+        function openAddPlantModal() {
+            editingPlantId = null;
+            document.getElementById('plantModalTitle').textContent = 'Thêm Loại Cây Mới';
+            document.getElementById('plantName').value = '';
+            document.getElementById('plantColor').value = getRandomColor();
+            updateColorPreview();
+            document.getElementById('plantModal').classList.add('active');
+        }
+
+        function openEditPlantModal(plantId) {
+            editingPlantId = plantId;
+            const plant = plants.find(p => p.id === plantId);
+            document.getElementById('plantModalTitle').textContent = 'Sửa Thông Tin Cây';
+            document.getElementById('plantName').value = plant.name;
+            document.getElementById('plantColor').value = plant.color;
+            updateColorPreview();
+            document.getElementById('plantModal').classList.add('active');
+        }
+
+        function updateColorPreview() {
+            const color = document.getElementById('plantColor').value;
+            document.getElementById('plantColorPreview').style.backgroundColor = color;
+            document.getElementById('plantColorText').textContent = color.toUpperCase();
+        }
+
+        function closePlantModal() {
+            document.getElementById('plantModal').classList.remove('active');
+        }
+
+        function savePlant() {
+            const name = document.getElementById('plantName').value.trim();
+            const color = document.getElementById('plantColor').value;
+
+            if (!name) {
+                alert('Vui lòng nhập tên loại cây!');
+                return;
+            }
+
+            if (editingPlantId) {
+                const plant = plants.find(p => p.id === editingPlantId);
+                plant.name = name;
+                plant.color = color;
+            } else {
+                const newPlant = {
+                    id: Date.now().toString(),
+                    name: name,
+                    color: color,
+                    tasks: []
+                };
+                plants.push(newPlant);
+            }
+
+            saveToLocalStorage();
+            renderPlantList();
+            renderFilterChips();
+            closePlantModal();
+            renderCurrentView();
+        }
+
+        function deletePlant(plantId) {
+            if (confirm('Bạn có chắc chắn muốn xóa loại cây này? Tất cả công việc liên quan sẽ bị xóa.')) {
+                plants = plants.filter(p => p.id !== plantId);
+                if (selectedPlantFilter === plantId) {
+                    selectedPlantFilter = 'all';
+                }
+                saveToLocalStorage();
+                renderPlantList();
+                renderFilterChips();
+                renderCurrentView();
+            }
+        }
+
+        // Task Management
+        let editingTaskId = null;
+
+        function openTaskModal(plantId) {
+            currentPlantId = plantId;
+            editingTaskId = null;
+            currentTaskType = 'periodic';
+            const plant = plants.find(p => p.id === plantId);
+            document.getElementById('taskModalTitle').textContent = `Quản Lý Công Việc - ${plant.name}`;
+            document.getElementById('taskFormTitle').textContent = 'Thêm Công Việc Mới';
+            document.getElementById('taskName').value = '';
+            document.getElementById('taskInterval').value = 7;
+            document.getElementById('taskStartDate').valueAsDate = new Date();
+            document.getElementById('taskOneTimeDate').valueAsDate = new Date();
+            document.getElementById('saveTaskBtn').textContent = '💾 Lưu Công Việc';
+            setTaskType('periodic');
+            renderTaskLibrary();
+            renderCurrentTasks();
+            document.getElementById('taskModal').classList.add('active');
+        }
+
+        function setTaskType(type) {
+            currentTaskType = type;
+            
+            if (type === 'periodic') {
+                document.getElementById('periodicBtn').classList.add('active');
+                document.getElementById('oneTimeBtn').classList.remove('active');
+                document.getElementById('periodicFields').style.display = 'block';
+                document.getElementById('oneTimeFields').style.display = 'none';
+            } else {
+                document.getElementById('periodicBtn').classList.remove('active');
+                document.getElementById('oneTimeBtn').classList.add('active');
+                document.getElementById('periodicFields').style.display = 'none';
+                document.getElementById('oneTimeFields').style.display = 'block';
+            }
+        }
+
+        function renderTaskLibrary() {
+            const container = document.getElementById('taskLibraryList');
+            
+            if (taskLibrary.length === 0) {
+                container.innerHTML = '<p style="color: #999; text-align: center; font-size: 12px; padding: 20px 0;">Chưa có công việc nào<br><br>Thư viện sẽ tự động lưu khi bạn thêm công việc mới</p>';
+                return;
+            }
+
+            container.innerHTML = taskLibrary.map(libTask => `
+                <div class="task-library-item" onclick="selectFromLibrary('${libTask.id}')">
+                    <div class="task-library-item-info">
+                        <div class="task-library-item-name">${libTask.name}</div>
+                        <div class="task-library-item-details">
+                            ${libTask.type === 'periodic' ? `🔄 Chu kỳ: ${libTask.interval} ngày` : '📅 Một lần'}
+                        </div>
+                    </div>
+                    <div class="task-library-delete">
+                        <button class="btn btn-danger btn-small" style="font-size: 10px; padding: 3px 6px;" onclick="event.stopPropagation(); deleteFromLibrary('${libTask.id}')" title="Xóa khỏi thư viện">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectFromLibrary(libTaskId) {
+            const libTask = taskLibrary.find(t => t.id === libTaskId);
+            
+            document.getElementById('taskName').value = libTask.name;
+            
+            if (libTask.type === 'periodic') {
+                setTaskType('periodic');
+                document.getElementById('taskInterval').value = libTask.interval;
+                document.getElementById('taskStartDate').valueAsDate = new Date();
+            } else {
+                setTaskType('oneTime');
+                document.getElementById('taskOneTimeDate').valueAsDate = new Date();
+            }
+            
+            document.getElementById('taskName').focus();
+        }
+
+        function deleteFromLibrary(libTaskId) {
+            if (confirm('Bạn có chắc muốn xóa công việc này khỏi thư viện?')) {
+                taskLibrary = taskLibrary.filter(t => t.id !== libTaskId);
+                saveTaskLibrary();
+                renderTaskLibrary();
+            }
+        }
+
+        function addToLibrary(taskData) {
+            // Check if task with same name and type already exists
+            const exists = taskLibrary.find(t => 
+                t.name.toLowerCase() === taskData.name.toLowerCase() && 
+                t.type === taskData.type &&
+                (taskData.type === 'oneTime' || t.interval === taskData.interval)
+            );
+            
+            if (!exists) {
+                const libTask = {
+                    id: Date.now().toString() + '_lib',
+                    name: taskData.name,
+                    type: taskData.type,
+                    interval: taskData.interval || null
+                };
+                taskLibrary.push(libTask);
+                saveTaskLibrary();
+            }
+        }
+
+        function editTask(plantId, taskId) {
+            editingTaskId = taskId;
+            const plant = plants.find(p => p.id === plantId);
+            const task = plant.tasks.find(t => t.id === taskId);
+            
+            document.getElementById('taskFormTitle').textContent = 'Chỉnh Sửa Công Việc';
+            document.getElementById('taskName').value = task.name;
+            
+            if (task.type === 'periodic') {
+                setTaskType('periodic');
+                document.getElementById('taskInterval').value = task.interval;
+                document.getElementById('taskStartDate').value = task.startDate;
+            } else {
+                setTaskType('oneTime');
+                document.getElementById('taskOneTimeDate').value = task.startDate;
+            }
+            
+            document.getElementById('saveTaskBtn').textContent = '✏️ Cập Nhật Công Việc';
+            
+            // Scroll to form
+            document.getElementById('taskName').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            document.getElementById('taskName').focus();
+        }
+
+        function closeTaskModal() {
+            editingTaskId = null;
+            document.getElementById('taskModal').classList.remove('active');
+        }
+
+        function saveTask() {
+            const name = document.getElementById('taskName').value.trim();
+
+            if (!name) {
+                alert('Vui lòng nhập tên công việc!');
+                return;
+            }
+
+            let taskData;
+            
+            if (currentTaskType === 'periodic') {
+                const interval = parseInt(document.getElementById('taskInterval').value);
+                const startDate = document.getElementById('taskStartDate').value;
+                
+                if (!interval || !startDate) {
+                    alert('Vui lòng điền đầy đủ thông tin chu kỳ!');
+                    return;
+                }
+                
+                taskData = {
+                    name: name,
+                    type: 'periodic',
+                    interval: interval,
+                    startDate: startDate
+                };
+            } else {
+                const oneTimeDate = document.getElementById('taskOneTimeDate').value;
+                
+                if (!oneTimeDate) {
+                    alert('Vui lòng chọn ngày thực hiện!');
+                    return;
+                }
+                
+                taskData = {
+                    name: name,
+                    type: 'oneTime',
+                    interval: null,
+                    startDate: oneTimeDate
+                };
+            }
+
+            const plant = plants.find(p => p.id === currentPlantId);
+            
+            if (editingTaskId) {
+                // Update existing task
+                const task = plant.tasks.find(t => t.id === editingTaskId);
+                task.name = taskData.name;
+                task.type = taskData.type;
+                task.interval = taskData.interval;
+                task.startDate = taskData.startDate;
+                editingTaskId = null;
+                document.getElementById('taskFormTitle').textContent = 'Thêm Công Việc Mới';
+                document.getElementById('saveTaskBtn').textContent = '💾 Lưu Công Việc';
+            } else {
+                // Add new task
+                const newTask = {
+                    id: Date.now().toString(),
+                    ...taskData
+                };
+                plant.tasks.push(newTask);
+            }
+
+            // Add to library
+            addToLibrary(taskData);
+
+            saveToLocalStorage();
+            renderTaskLibrary();
+            renderCurrentTasks();
+            renderPlantList(); // Update plant list to show new task count
+            renderCurrentView();
+            
+            // Clear form
+            document.getElementById('taskName').value = '';
+            document.getElementById('taskInterval').value = 7;
+            document.getElementById('taskStartDate').valueAsDate = new Date();
+            document.getElementById('taskOneTimeDate').valueAsDate = new Date();
+        }
+
+        function deleteTask(plantId, taskId) {
+            if (confirm('Bạn có chắc chắn muốn xóa công việc này?')) {
+                const plant = plants.find(p => p.id === plantId);
+                plant.tasks = plant.tasks.filter(t => t.id !== taskId);
+                saveToLocalStorage();
+                renderCurrentTasks();
+                renderPlantList(); // Update plant list to show new task count
+                renderCurrentView();
+            }
+        }
+
+        function renderCurrentTasks() {
+            const plant = plants.find(p => p.id === currentPlantId);
+            const container = document.getElementById('currentTasksList');
+            
+            if (!plant.tasks || plant.tasks.length === 0) {
+                container.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Chưa có công việc nào</p>';
+                return;
+            }
+
+            container.innerHTML = plant.tasks.map(task => `
+                <div class="task-list-item">
+                    <div>
+                        <strong>${task.name}</strong><br>
+                        <small>
+                            ${task.type === 'periodic' 
+                                ? `🔄 Chu kỳ: ${task.interval} ngày | Bắt đầu: ${formatDate(new Date(task.startDate))}` 
+                                : `📅 Ngày thực hiện: ${formatDate(new Date(task.startDate))}`
+                            }
+                        </small>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-secondary btn-small" onclick="editTask('${currentPlantId}', '${task.id}')">Sửa</button>
+                        <button class="btn btn-danger btn-small" onclick="deleteTask('${currentPlantId}', '${task.id}')">Xóa</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Filter Management
+        function renderFilterChips() {
+            const container = document.getElementById('filterChips');
+            
+            if (plants.length === 0) {
+                container.innerHTML = '<p style="color: #999;">Thêm loại cây để sử dụng bộ lọc</p>';
+                return;
+            }
+
+            const chips = [`
+                <div class="filter-chip all-plants ${selectedPlantFilter === 'all' ? 'active' : ''}" 
+                     onclick="selectFilter('all')">
+                    🌿 Tất Cả Loại Cây
+                </div>
+            `];
+
+            plants.forEach(plant => {
+                chips.push(`
+                    <div class="filter-chip ${selectedPlantFilter === plant.id ? 'active' : ''}" 
+                         style="border-color: ${plant.color}; ${selectedPlantFilter === plant.id ? `background: ${plant.color}; color: white;` : `color: ${plant.color};`}"
+                         onclick="selectFilter('${plant.id}')">
+                        ${plant.name}
+                    </div>
+                `);
+            });
+
+            container.innerHTML = chips.join('');
+        }
+
+        function selectFilter(filterId) {
+            selectedPlantFilter = filterId;
+            renderFilterChips();
+            renderCurrentView();
+        }
+
+        // Calculate task occurrences
+        function getTaskOccurrences(task, startDate, endDate) {
+            const occurrences = [];
+            const taskStart = new Date(task.startDate);
+
+            if (task.type === 'oneTime') {
+                // One-time task: only show on the specified date
+                if (taskStart >= startDate && taskStart <= endDate) {
+                    occurrences.push(new Date(taskStart));
+                }
+            } else {
+                // Periodic task: calculate recurring dates
+                let currentOccurrence = new Date(taskStart);
+                
+                while (currentOccurrence <= endDate) {
+                    if (currentOccurrence >= startDate) {
+                        occurrences.push(new Date(currentOccurrence));
+                    }
+                    currentOccurrence.setDate(currentOccurrence.getDate() + task.interval);
+                }
+            }
+
+            return occurrences;
+        }
+
+        // View Management
+        function switchView(view) {
+            currentView = view;
+            
+            // Update button states
+            document.querySelectorAll('.view-toggle .btn').forEach(btn => {
+                btn.classList.remove('btn-primary', 'active');
+                btn.classList.add('btn-secondary');
+            });
+            
+            if (view === 'list') {
+                document.getElementById('listView').style.display = 'block';
+                document.getElementById('weekView').style.display = 'none';
+                document.getElementById('monthView').style.display = 'none';
+                document.querySelectorAll('.view-toggle .btn')[0].classList.remove('btn-secondary');
+                document.querySelectorAll('.view-toggle .btn')[0].classList.add('btn-primary', 'active');
+                renderListView();
+            } else if (view === 'week') {
+                document.getElementById('listView').style.display = 'none';
+                document.getElementById('weekView').style.display = 'block';
+                document.getElementById('monthView').style.display = 'none';
+                document.querySelectorAll('.view-toggle .btn')[1].classList.remove('btn-secondary');
+                document.querySelectorAll('.view-toggle .btn')[1].classList.add('btn-primary', 'active');
+                renderWeekView();
+            } else {
+                document.getElementById('listView').style.display = 'none';
+                document.getElementById('weekView').style.display = 'none';
+                document.getElementById('monthView').style.display = 'block';
+                document.querySelectorAll('.view-toggle .btn')[2].classList.remove('btn-secondary');
+                document.querySelectorAll('.view-toggle .btn')[2].classList.add('btn-primary', 'active');
+                renderMonthView();
+            }
+        }
+
+        function renderCurrentView() {
+            if (currentView === 'list') {
+                renderListView();
+            } else if (currentView === 'week') {
+                renderWeekView();
+            } else {
+                renderMonthView();
+            }
+        }
+
+        // List View (Day by Day)
+        function renderListView() {
+            const container = document.getElementById('listView');
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Get tasks for next 30 days
+            const days = [];
+            for (let i = 0; i < 30; i++) {
+                const date = new Date(today);
+                date.setDate(date.getDate() + i);
+                days.push(date);
+            }
+
+            const dayGroupsHtml = days.map(date => {
+                const tasksForDay = getAllTasksForDate(date);
+                if (tasksForDay.length === 0) return '';
+
+                const isToday = formatDateKey(date) === formatDateKey(today);
+                const dayOfWeek = date.getDay();
+                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+                return `
+                    <div class="day-group ${isToday ? 'today' : ''} ${isWeekend ? 'weekend' : ''}">
+                        <div class="day-group-header">
+                            <h3>${formatDateFull(date)} ${isToday ? '🌟 HÔM NAY' : ''}</h3>
+                            <div class="day-group-date">${tasksForDay.length} công việc</div>
+                        </div>
+                        ${tasksForDay.map(task => `
+                            <div class="list-task" style="border-left-color: ${task.plantColor};">
+                                <div class="list-task-plant" style="color: ${task.plantColor};">
+                                    ${task.plantName}
+                                </div>
+                                <div class="list-task-name">
+                                    ${task.taskName}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }).join('');
+
+            if (!dayGroupsHtml) {
+                container.innerHTML = '<div class="no-data">📅 Không có công việc nào trong 30 ngày tới<br><br>Hãy thêm loại cây và thiết lập lịch công việc!</div>';
+            } else {
+                container.innerHTML = dayGroupsHtml;
+            }
+        }
+
+        // Week View
+        function renderWeekView() {
+            const container = document.getElementById('weekView');
+            
+            // Get start of week (Monday)
+            const startOfWeek = new Date(currentDate);
+            const day = startOfWeek.getDay();
+            const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1);
+            startOfWeek.setDate(diff);
+            startOfWeek.setHours(0, 0, 0, 0);
+
+            // Generate 4 weeks
+            let weeksHtml = '';
+            
+            for (let weekIndex = 0; weekIndex < 4; weekIndex++) {
+                const weekStart = new Date(startOfWeek);
+                weekStart.setDate(weekStart.getDate() + weekIndex * 7);
+                
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekEnd.getDate() + 6);
+
+                // Week header
+                weeksHtml += `
+                    <div class="week-header">
+                        <h2>Tuần ${weekIndex + 1}: ${formatDate(weekStart)} - ${formatDate(weekEnd)}</h2>
+                    </div>
+                    <div class="week-grid">
+                `;
+
+                // Days of week
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                for (let i = 0; i < 7; i++) {
+                    const date = new Date(weekStart);
+                    date.setDate(date.getDate() + i);
+                    
+                    const isToday = formatDateKey(date) === formatDateKey(today);
+                    const dayOfWeek = date.getDay();
+                    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                    const dayNames = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+                    
+                    const tasksForDay = getAllTasksForDate(date);
+
+                    weeksHtml += `
+                        <div class="day-column">
+                            <div class="day-column-header ${isToday ? 'today' : ''} ${isWeekend ? 'weekend' : ''}">
+                                <div>${dayNames[dayOfWeek]}</div>
+                                <div style="font-size: 20px; margin-top: 5px;">${date.getDate()}/${date.getMonth() + 1}</div>
+                            </div>
+                            <div class="day-column-body">
+                                ${tasksForDay.length > 0 ? tasksForDay.map(task => `
+                                    <div class="day-task-item" style="border-left-color: ${task.plantColor};">
+                                        <div class="day-task-plant" style="color: ${task.plantColor};">${task.plantName}</div>
+                                        <div class="day-task-name">${task.taskName}</div>
+                                    </div>
+                                `).join('') : '<div class="no-tasks">Không có công việc</div>'}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                weeksHtml += '</div>';
+            }
+
+            const navigation = `
+                <div class="week-nav">
+                    <button class="btn btn-secondary" onclick="previousWeeks()">← 4 Tuần Trước</button>
+                    <button class="btn btn-primary" onclick="setToday()">📍 Tuần Hiện Tại</button>
+                    <button class="btn btn-secondary" onclick="nextWeeks()">4 Tuần Sau →</button>
+                </div>
+            `;
+
+            container.innerHTML = navigation + weeksHtml;
+        }
+
+        function previousWeeks() {
+            currentDate.setDate(currentDate.getDate() - 28);
+            renderWeekView();
+        }
+
+        function nextWeeks() {
+            currentDate.setDate(currentDate.getDate() + 28);
+            renderWeekView();
+        }
+
+        function setToday() {
+            currentDate = new Date();
+            renderCurrentView();
+        }
+
+        // Month View
+        function renderMonthView() {
+            const container = document.getElementById('monthView');
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            const monthNav = `
+                <div class="month-nav">
+                    <button class="btn btn-secondary" onclick="previousMonth()">← Tháng Trước</button>
+                    <h2>Tháng ${month + 1}/${year}</h2>
+                    <button class="btn btn-secondary" onclick="nextMonth()">Tháng Sau →</button>
+                </div>
+            `;
+
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDay = firstDay.getDay();
+            const totalDays = lastDay.getDate();
+
+            const weekDays = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+            const calendarHeader = weekDays.map(day => 
+                `<div class="calendar-header">${day}</div>`
+            ).join('');
+
+            let calendarDays = '';
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Previous month days
+            const prevMonthLastDay = new Date(year, month, 0).getDate();
+            for (let i = startDay - 1; i >= 0; i--) {
+                const date = new Date(year, month - 1, prevMonthLastDay - i);
+                calendarDays += `<div class="calendar-day other-month"><div class="calendar-day-number">${prevMonthLastDay - i}</div></div>`;
+            }
+
+            // Current month days
+            for (let day = 1; day <= totalDays; day++) {
+                const date = new Date(year, month, day);
+                const isToday = formatDateKey(date) === formatDateKey(today);
+                const dayOfWeek = date.getDay();
+                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                const tasks = getAllTasksForDate(date);
+                
+                const tasksHtml = tasks.map(task => 
+                    `<div class="task-item" style="border-left-color: ${task.plantColor};" title="${task.plantName} - ${task.taskName}">
+                        <strong style="color: ${task.plantColor};">${task.plantName}:</strong> ${task.taskName}
+                    </div>`
+                ).join('');
+
+                calendarDays += `
+                    <div class="calendar-day ${isToday ? 'today' : ''} ${isWeekend ? 'weekend' : ''}">
+                        <div class="calendar-day-number">${day}</div>
+                        ${tasksHtml || '<div class="no-tasks">-</div>'}
+                    </div>
+                `;
+            }
+
+            // Next month days
+            const remainingDays = 42 - (startDay + totalDays);
+            for (let day = 1; day <= remainingDays; day++) {
+                calendarDays += `<div class="calendar-day other-month"><div class="calendar-day-number">${day}</div></div>`;
+            }
+
+            container.innerHTML = monthNav + '<div class="calendar-grid">' + calendarHeader + calendarDays + '</div>';
+        }
+
+        function previousMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderMonthView();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderMonthView();
+        }
+
+        // Get all tasks for a specific date (filtered)
+        function getAllTasksForDate(date) {
+            const tasks = [];
+            const dateStart = new Date(date);
+            dateStart.setHours(0, 0, 0, 0);
+            const dateEnd = new Date(date);
+            dateEnd.setHours(23, 59, 59, 999);
+
+            const plantsToShow = selectedPlantFilter === 'all' ? plants : plants.filter(p => p.id === selectedPlantFilter);
+
+            plantsToShow.forEach(plant => {
+                plant.tasks.forEach(task => {
+                    const occurrences = getTaskOccurrences(task, dateStart, dateEnd);
+                    occurrences.forEach(occurrence => {
+                        tasks.push({
+                            plantId: plant.id,
+                            plantName: plant.name,
+                            plantColor: plant.color,
+                            taskId: task.id,
+                            taskName: task.name,
+                            date: occurrence
+                        });
+                    });
+                });
+            });
+
+            return tasks;
+        }
+
+        // Render plant list in sidebar
+        function renderPlantList() {
+            const container = document.getElementById('plantList');
+            
+            if (plants.length === 0) {
+                container.innerHTML = '<div class="no-data">Chưa có loại cây nào.<br><br>Nhấn nút bên trên để thêm!</div>';
+                return;
+            }
+
+            container.innerHTML = plants.map(plant => {
+                const taskCount = plant.tasks.length;
+                const isSelected = selectedPlantFilter === plant.id;
+                const taskText = taskCount === 1 ? '1 Công Việc' : `${taskCount} Công Việc`;
+                return `
+                    <div class="plant-item ${isSelected ? 'selected' : ''}" style="border-left-color: ${plant.color}">
+                        <div class="plant-item-header">
+                            <div class="plant-color-dot" style="background-color: ${plant.color};"></div>
+                            <h3>${plant.name}</h3>
+                        </div>
+                        <div>
+                            ${taskCount > 0 ? `<span class="task-badge">${taskText}</span>` : '<span style="color: #999; font-size: 10px;">Chưa có công việc</span>'}
+                        </div>
+                        <div class="plant-actions">
+                            <button class="btn btn-primary btn-tiny" onclick="openTaskModal('${plant.id}')">Quản Lý</button>
+                            <button class="btn btn-secondary btn-tiny" onclick="openEditPlantModal('${plant.id}')">Sửa</button>
+                            <button class="btn btn-danger btn-tiny" onclick="deletePlant('${plant.id}')">Xóa</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Utility functions
+        function formatDate(date) {
+            const d = new Date(date);
+            const day = d.getDate();
+            const month = d.getMonth() + 1;
+            return `${day}/${month}`;
+        }
+
+        function formatDateFull(date) {
+            const d = new Date(date);
+            const day = d.getDate();
+            const month = d.getMonth() + 1;
+            const year = d.getFullYear();
+            const dayNames = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+            const dayName = dayNames[d.getDay()];
+            return `${dayName}, ${day}/${month}/${year}`;
+        }
+
+        function formatDateKey(date) {
+            const d = new Date(date);
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('gardenPlants', JSON.stringify(plants));
+        }
+
+        function saveTaskLibrary() {
+            localStorage.setItem('taskLibrary', JSON.stringify(taskLibrary));
+        }
+
+        function getRandomColor() {
+            const colors = [
+                '#667eea', '#764ba2', '#f093fb', '#4facfe', 
+                '#43e97b', '#fa709a', '#30cfd0', '#a8edea',
+                '#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24',
+                '#6c5ce7', '#a29bfe', '#fd79a8', '#fdcb6e'
+            ];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        // Data Export/Import
+        function exportData() {
+            const data = {
+                plants: plants,
+                taskLibrary: taskLibrary,
+                exportDate: new Date().toISOString(),
+                version: '1.0'
+            };
+
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `vuon-rau-backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            alert('✅ Dữ liệu đã được xuất!\n\nFile đã tải xuống: ' + link.download + '\n\nLưu file này để sao lưu hoặc chuyển sang máy khác.');
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (!data.plants || !Array.isArray(data.plants)) {
+                        throw new Error('File không đúng định dạng!');
+                    }
+
+                    const confirmMsg = `Bạn có chắc muốn nhập dữ liệu?\n\n` +
+                        `File xuất ngày: ${data.exportDate ? new Date(data.exportDate).toLocaleString('vi-VN') : 'Không rõ'}\n` +
+                        `Số loại cây: ${data.plants.length}\n` +
+                        `Số công việc trong thư viện: ${data.taskLibrary ? data.taskLibrary.length : 0}\n\n` +
+                        `⚠️ CẢNH BÁO: Dữ liệu hiện tại sẽ bị GHI ĐÈ!`;
+
+                    if (confirm(confirmMsg)) {
+                        plants = data.plants;
+                        taskLibrary = data.taskLibrary || [];
+                        
+                        saveToLocalStorage();
+                        saveTaskLibrary();
+                        
+                        renderPlantList();
+                        renderFilterChips();
+                        renderCurrentView();
+
+                        alert('✅ Nhập dữ liệu thành công!\n\n' +
+                            `Đã nhập ${plants.length} loại cây và ${taskLibrary.length} công việc trong thư viện.`);
+                    }
+                } catch (error) {
+                    alert('❌ Lỗi khi nhập dữ liệu!\n\n' + error.message + '\n\nVui lòng kiểm tra file có đúng định dạng không.');
+                }
+            };
+            reader.readAsText(file);
+            
+            // Reset input để có thể import lại cùng file
+            event.target.value = '';
+        }
+    </script>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+        // Register service worker for PWA functionality
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker đã đăng ký thành công:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('Đăng ký Service Worker thất bại:', error);
+                    });
+            });
+        }
+
+        // Prompt to install PWA
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            
+            // Optionally, show an install button
+            console.log('PWA có thể được cài đặt');
+        });
+    </script>
+</body>
+</html>
